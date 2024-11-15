@@ -12,6 +12,9 @@ class Exceptions:
     class UniqueBlockIdError(Exception):
         """Block id should be unique"""
 
+    class OccupiedBlockPosition(Exception):
+        """Block cannot move to occupied position"""
+
 
 # -----------------------------
 #           Functions
@@ -105,6 +108,14 @@ class Board:
             raise Exceptions.UniqueBlockIdError
         self.board[s.position.x][s.position.y] = s.block
 
+    def move_block(self, block: Block, new_position: Position):
+        if self.board[new_position.x][new_position.y]:
+            raise Exceptions.OccupiedBlockPosition
+
+        old_position = self.find_if(lambda b: b.block_id == block.block_id)
+        self.board[old_position.x][old_position.y] = None
+        self.board[new_position.x][new_position.y] = block
+
     def __str__(self) -> str:
         # TODO display as string for debugging
         pass
@@ -148,16 +159,13 @@ class GameView:
 
     def user_input(self, direction: Direction):
         self.viewmodel.move(direction)
+        self.update_positions()
 
     def increment_value(self, block: Block):
         self.board.increment_block(block)
-        # TODO animate
-        pass
 
     def new_block(self, s: Set):
         self.board.add_block(s)
-        # TODO animate
-        pass
 
     def update_positions(self):
         old_sets = self.board.get_sets()
@@ -182,5 +190,4 @@ class GameView:
                 self.increment_value(old_set.block)
 
     def animate_to(self, block: Block, new_position: Position):
-        # TODO update the position of block to new position with animation
-        pass
+        self.board.move_block(block, new_position)
