@@ -8,8 +8,9 @@ values = [2 ** i for i in range(1, 12)]  # [2, 4, 8, 16, 32, 64, 128, 256, 512, 
 #           Exceptions
 # ==============================
 
-class UniqueBlockIdError(Exception):
-    """Block id should be unique"""
+class Exceptions:
+    class UniqueBlockIdError(Exception):
+        """Block id should be unique"""
 
 
 # -----------------------------
@@ -101,7 +102,7 @@ class Board:
 
     def add_block(self, s: Set):
         if self.first(lambda x: x.block_id == s.block.block_id):
-            raise UniqueBlockIdError
+            raise Exceptions.UniqueBlockIdError
         self.board[s.position.x][s.position.y] = s.block
 
     def __str__(self) -> str:
