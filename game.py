@@ -75,7 +75,7 @@ class Set:
 class Board:
 
     def __init__(self):
-        self.board = [[] * WIDTH] * WIDTH
+        self.board = [[None for _ in range(WIDTH)] for _ in range(WIDTH)]
 
     def get_sets(self) -> list:  # returns a tuple of (block, position)
         pass
