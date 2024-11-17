@@ -116,6 +116,15 @@ class Board:
         self.board[old_position.x][old_position.y] = None
         self.board[new_position.x][new_position.y] = block
 
+    def get_blanks(self) -> list:
+        result = []
+        for x in range(0, WIDTH):
+            for y in range(0, WIDTH):
+                if not self.board[x][y]:
+                    result.append(Position(x, y))
+
+        return result
+
     def __str__(self) -> str:
         # TODO display as string for debugging
         pass
