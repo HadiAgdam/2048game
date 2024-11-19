@@ -1,4 +1,5 @@
 from enum import Enum
+from random import randint
 
 WIDTH = 4
 values = [2 ** i for i in range(1, 12)]  # [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
@@ -14,6 +15,9 @@ class Exceptions:
 
     class OccupiedBlockPosition(Exception):
         """Block cannot move to occupied position"""
+
+    class BoardIsFull(Exception):
+        """Board is full. Cannot add more blocks."""
 
 
 # -----------------------------
@@ -76,6 +80,16 @@ class Set:
 # ==============================
 
 class Board:
+    index = -1
+
+    def new_block(self, position, v: int):
+        if self.board[position.x][position.y]:
+            raise Exceptions.OccupiedBlockPosition
+
+        self.index += 1
+        self.board[position.x][position.y] = Block(self.index, v)
+
+        return self.index
 
     def __init__(self):
         self.board = [[None for _ in range(WIDTH)] for _ in range(WIDTH)]
@@ -154,6 +168,22 @@ class GameViewModel:
     def move(self, direction: Direction):
         pass
 
+    def add_block(self):
+
+        blanks = self.board.get_blanks()
+
+        if len(blanks) == 0:
+            return
+
+        b = blanks[randint(0, len(blanks) - 1)]
+
+        if randint(0, 4) < 4:  # 3 of 4 chance v = 0
+            v = 0
+        else:
+            v = 1
+
+        self.board.new_block(b, v)
+
 
 # ==============================
 #          Game View
@@ -169,6 +199,7 @@ class GameView:
     def user_input(self, direction: Direction):
         self.viewmodel.move(direction)
         self.update_positions()
+        self.viewmodel.add_block()
 
     def increment_value(self, block: Block):
         self.board.increment_block(block)
