@@ -5,34 +5,22 @@ WIDTH = 4
 values = [2 ** i for i in range(1, 12)]  # [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
 
 
-# ==============================
-#           Exceptions
-# ==============================
-
 class Exceptions:
     class UniqueBlockIdError(Exception):
-        """Block id should be unique"""
+        pass
 
     class OccupiedBlockPosition(Exception):
-        """Block cannot move to occupied position"""
+        pass
 
     class BoardIsFull(Exception):
-        """Board is full. Cannot add more blocks."""
+        pass
 
-
-# -----------------------------
-#           Functions
-# -----------------------------
 
 def first(items: list, condition):
     for i in items:
         if condition(i):
             return i
 
-
-# ==============================
-#           Position
-# ==============================
 
 class Position:
 
@@ -45,15 +33,9 @@ class Position:
             return self.x == other.x and self.y == other.y
 
 
-# ==============================
-#           Block
-# ==============================
-
 class Block:
 
-    def __init__(self,
-                 block_id: int,
-                 value: int):
+    def __init__(self, block_id: int, value: int):
         self.block_id = block_id
         self.value = value
 
@@ -61,26 +43,22 @@ class Block:
         if isinstance(other, Block):
             return self.block_id == other.block_id
 
+    def __str__(self):
+        return str(values[self.value])
 
-# ==============================
-#           Set
-# ==============================
 
 class Set:
 
-    def __init__(self,
-                 position: Position,
-                 block: Block):
+    def __init__(self, position: Position, block: Block):
         self.position = position
         self.block = block
 
 
-# ==============================
-#           Board
-# ==============================
-
 class Board:
     index = -1
+
+    def __init__(self):
+        self.board = [[None for _ in range(WIDTH)] for _ in range(WIDTH)]
 
     def new_block(self, position, v: int):
         if self.board[position.x][position.y]:
@@ -91,11 +69,13 @@ class Board:
 
         return self.index
 
-    def __init__(self):
-        self.board = [[None for _ in range(WIDTH)] for _ in range(WIDTH)]
-
-    def get_sets(self) -> list:  # returns a tuple of (block, position)
-        pass
+    def get_sets(self) -> list:
+        result = []
+        for x in range(0, WIDTH):
+            for y in range(0, WIDTH):
+                if self.board[x][y]:
+                    result.append(Set(Position(x, y), self.board[x][y]))
+        return result
 
     def first(self, condition) -> Set:
         for s in self.get_sets():
@@ -118,7 +98,7 @@ class Board:
         self.board[new_position.x][new_position.y] = block
 
     def add_block(self, s: Set):
-        if self.first(lambda x: x.block_id == s.block.block_id):
+        if self.first(lambda x: x.block.block_id == s.block.block_id):
             raise Exceptions.UniqueBlockIdError
         self.board[s.position.x][s.position.y] = s.block
 
@@ -136,17 +116,16 @@ class Board:
             for y in range(0, WIDTH):
                 if not self.board[x][y]:
                     result.append(Position(x, y))
-
         return result
 
     def __str__(self) -> str:
-        # TODO display as string for debugging
-        pass
+        result = ""
+        for x in range(0, WIDTH):
+            for y in range(0, WIDTH):
+                result += f"{0 if not self.board[x][y] else self.board[x][y]}\t"
+            result += "\n"
+        return result
 
-
-# ==============================
-#           Direction
-# ==============================
 
 class Direction(Enum):
     LEFT = "L"
@@ -155,79 +134,101 @@ class Direction(Enum):
     DOWN = "D"
 
 
-# ==============================
-#         Game View Model
-# ==============================
-
-# viewmodel layer
 class GameViewModel:
 
     def __init__(self):
         self.board = Board()
 
     def move(self, direction: Direction):
-        pass
+        if direction == Direction.UP:
+            for x in range(WIDTH):
+                for y in range(1, WIDTH):
+                    if self.board.board[y][x]:
+                        for k in range(y, 0, -1):
+                            if not self.board.board[k - 1][x]:
+                                self.board.board[k - 1][x] = self.board.board[k][x]
+                                self.board.board[k][x] = None
+                            elif self.board.board[k - 1][x].value == self.board.board[k][x].value:
+                                self.board.board[k - 1][x].value += 1
+                                self.board.board[k][x] = None
+                                break
+        elif direction == Direction.DOWN:
+            for x in range(WIDTH):
+                for y in range(WIDTH - 2, -1, -1):
+                    if self.board.board[y][x]:
+                        for k in range(y, WIDTH - 1):
+                            if not self.board.board[k + 1][x]:
+                                self.board.board[k + 1][x] = self.board.board[k][x]
+                                self.board.board[k][x] = None
+                            elif self.board.board[k + 1][x].value == self.board.board[k][x].value:
+                                self.board.board[k + 1][x].value += 1
+                                self.board.board[k][x] = None
+                                break
+        elif direction == Direction.LEFT:
+            for y in range(WIDTH):
+                for x in range(1, WIDTH):
+                    if self.board.board[y][x]:
+                        for k in range(x, 0, -1):
+                            if not self.board.board[y][k - 1]:
+                                self.board.board[y][k - 1] = self.board.board[y][k]
+                                self.board.board[y][k] = None
+                            elif self.board.board[y][k - 1].value == self.board.board[y][k].value:
+                                self.board.board[y][k - 1].value += 1
+                                self.board.board[y][k] = None
+                                break
+        elif direction == Direction.RIGHT:
+            for y in range(WIDTH):
+                for x in range(WIDTH - 2, -1, -1):
+                    if self.board.board[y][x]:
+                        for k in range(x, WIDTH - 1):
+                            if not self.board.board[y][k + 1]:
+                                self.board.board[y][k + 1] = self.board.board[y][k]
+                                self.board.board[y][k] = None
+                            elif self.board.board[y][k + 1].value == self.board.board[y][k].value:
+                                self.board.board[y][k + 1].value += 1
+                                self.board.board[y][k] = None
+                                break
 
     def add_block(self):
-
         blanks = self.board.get_blanks()
+        if not blanks:
+            raise Exceptions.BoardIsFull
 
-        if len(blanks) == 0:
-            return
-
-        b = blanks[randint(0, len(blanks) - 1)]
-
-        if randint(0, 4) < 4:  # 3 of 4 chance v = 0
-            v = 0
-        else:
-            v = 1
-
-        self.board.new_block(b, v)
+        pos = blanks[randint(0, len(blanks) - 1)]
+        value = 0 if randint(0, 4) < 4 else 1
+        self.board.new_block(pos, value)
 
 
-# ==============================
-#          Game View
-# ==============================
-
-# view layer
 class GameView:
 
     def __init__(self, viewmodel: GameViewModel):
         self.viewmodel = viewmodel
-        self.board = Board()
 
     def user_input(self, direction: Direction):
         self.viewmodel.move(direction)
-        self.update_positions()
         self.viewmodel.add_block()
 
-    def increment_value(self, block: Block):
-        self.board.increment_block(block)
+    def display(self):
+        print(self.viewmodel.board)
 
-    def new_block(self, s: Set):
-        self.board.add_block(s)
 
-    def update_positions(self):
-        old_sets = self.board.get_sets()
-        new_sets = self.viewmodel.board.get_sets()
+if __name__ == "__main__":
+    viewmodel = GameViewModel()
+    game = GameView(viewmodel)
 
-        for new_set in new_sets:
-            old_set = first(old_sets, lambda s: s.block == new_set.block)
+    for _ in range(2):
+        viewmodel.add_block()
 
-            if not old_set:  # block is new
-                self.new_block(new_set)
-                continue
-
-            old_sets.remove(old_set)
-
-            if old_set.position == new_set.position:
-                continue  # block is in same place
-
-            else:  # block is moved
-                self.animate_to(old_set.block, new_set.position)
-
-            if old_set.block.value != new_set.block.value:
-                self.increment_value(old_set.block)
-
-    def animate_to(self, block: Block, new_position: Position):
-        self.board.move_block(block, new_position)
+    while True:
+        game.display()
+        move = input("Enter move (W/A/S/D): ").strip().upper()
+        if move == "W":
+            game.user_input(Direction.UP)
+        elif move == "S":
+            game.user_input(Direction.DOWN)
+        elif move == "A":
+            game.user_input(Direction.LEFT)
+        elif move == "D":
+            game.user_input(Direction.RIGHT)
+        else:
+            print("Invalid input!")
