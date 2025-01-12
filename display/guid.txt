@@ -1,13 +1,13 @@
 Use keyboard to play.
 ###################################################
 
-W -> up
+W -> go up
 
-S -> Down
+S -> go down
 
-L -> Left
+L -> go left
 
-R -> right
+R -> go right
 
 ###################################################
 
