@@ -5,7 +5,7 @@ W -> up
 
 S -> Down
 
-L -> Left
+L -> left
 
 R -> right
 
